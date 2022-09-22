@@ -6,7 +6,7 @@
  sensor. Otherwise you may crush the capillaries in your finger which results
  in bad or no results. This differs from example one by giving an additional
  two data points: an extended finger status and the r value of the blood oxygen
- level. A summary of the hardware connections are as follows: 
+ level. A summary of the hardware connections are as follows:
  SDA -> SDA
  SCL -> SCL
  RESET -> PIN 4
@@ -17,7 +17,7 @@
  SparkFun Electronics
 
  If you run into an error code check the following table to help diagnose your
- problem: 
+ problem:
  1 = Unavailable Command
  2 = Unavailable Function
  3 = Data Format Error
@@ -30,77 +30,74 @@
 #include <Wire.h>
 
 // Reset pin, MFIO pin
-int resPin = 4;
-int mfioPin = 5;
+int resPin = RESPIN;
+int mfioPin = MFIOPIN;
 
 // Takes address, reset pin, and MFIO pin.
-SparkFun_Bio_Sensor_Hub bioHub(resPin, mfioPin); 
+SparkFun_Bio_Sensor_Hub bioHub(resPin, mfioPin);
 
-bioData body;  
+bioData body;
 // ^^^^^^^^^
 // What's this!? This is a type (like int, byte, long) unique to the SparkFun
 // Pulse Oximeter and Heart Rate Monitor. Unlike those other types it holds
 // specific information on your heartrate and blood oxygen levels. BioData is
-// actually a specific kind of type, known as a "struct". 
+// actually a specific kind of type, known as a "struct".
 // You can choose another variable name other than "body", like "blood", or
-// "readings", but I chose "body". Using this "body" varible in the 
-// following way gives us access to the following data: 
+// "readings", but I chose "body". Using this "body" varible in the
+// following way gives us access to the following data:
 // body.heartrate  - Heartrate
 // body.confidence - Confidence in the heartrate value
 // body.oxygen     - Blood oxygen level
 // body.status     - Has a finger been sensed?
 // body.extStatus  - What else is the finger up to?
-// body.rValue     - Blood oxygen correlation coefficient.  
+// body.rValue     - Blood oxygen correlation coefficient.
 
-
-void setup(){
+void setup() {
 
   Serial.begin(115200);
 
   Wire.begin();
   int result = bioHub.begin();
-  if (result == 0) //Zero errors!
+  if (result == 0) // Zero errors!
     Serial.println("Sensor started!");
   else
     Serial.println("Could not communicate with the sensor!!!");
- 
-  Serial.println("Configuring Sensor...."); 
-  int error = bioHub.configBpm(MODE_TWO); // Configuring just the BPM settings. 
-  if(error == 0){ // Zero errors
+
+  Serial.println("Configuring Sensor....");
+  int error = bioHub.configBpm(MODE_TWO); // Configuring just the BPM settings.
+  if (error == 0) {                       // Zero errors
     Serial.println("Sensor configured.");
-  }
-  else {
+  } else {
     Serial.println("Error configuring sensor.");
-    Serial.print("Error: "); 
-    Serial.println(error); 
+    Serial.print("Error: ");
+    Serial.println(error);
   }
 
   // Data lags a bit behind the sensor, if you're finger is on the sensor when
   // it's being configured this delay will give some time for the data to catch
-  // up. 
+  // up.
   Serial.println("Loading up the buffer with data....");
-  delay(4000); 
-  
+  delay(4000);
 }
 
-void loop(){
+void loop() {
 
-    // Information from the readBpm function will be saved to our "body"
-    // variable.  
-    body = bioHub.readBpm();
-    Serial.print("Heartrate: ");
-    Serial.println(body.heartRate); 
-    Serial.print("Confidence: ");
-    Serial.println(body.confidence); 
-    Serial.print("Oxygen: ");
-    Serial.println(body.oxygen); 
-    Serial.print("Status: ");
-    Serial.println(body.status); 
-    Serial.print("Extended Status: ");
-    Serial.println(body.extStatus); 
-    Serial.print("Blood Oxygen R value: ");
-    Serial.println(body.rValue); 
-    // Slow it down or your heart rate will go up trying to keep up
-    // with the flow of numbers
-    delay(250); 
+  // Information from the readBpm function will be saved to our "body"
+  // variable.
+  body = bioHub.readBpm();
+  Serial.print("Heartrate: ");
+  Serial.println(body.heartRate);
+  Serial.print("Confidence: ");
+  Serial.println(body.confidence);
+  Serial.print("Oxygen: ");
+  Serial.println(body.oxygen);
+  Serial.print("Status: ");
+  Serial.println(body.status);
+  Serial.print("Extended Status: ");
+  Serial.println(body.extStatus);
+  Serial.print("Blood Oxygen R value: ");
+  Serial.println(body.rValue);
+  // Slow it down or your heart rate will go up trying to keep up
+  // with the flow of numbers
+  delay(250);
 }
