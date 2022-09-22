@@ -1,8 +1,8 @@
 #ifndef _SPARKFUN_BIO_SENSOR_HUB_LIBRARY_H_
 #define _SPARKFUN_BIO_SENSOR_HUB_LIBRARY_H_
 
-#include <Wire.h>
 #include <Arduino.h>
+#include <Wire.h>
 
 #define WRITE_FIFO_INPUT_BYTE 0x04
 #define DISABLE 0x00
@@ -39,6 +39,7 @@ struct bioData {
 
   uint32_t irLed;
   uint32_t redLed;
+  uint32_t greenLed;
   uint16_t heartRate;  // LSB = 0.1bpm
   uint8_t confidence;  // 0-100% LSB = 1%
   uint16_t oxygen;     // 0-100% LSB = 1%
@@ -720,6 +721,9 @@ private:
   // delays 60 microseconds, during which the MAX32664 retrieves the requested
   // information. An I-squared-C request is then issued, and the information is read and returned.
   uint8_t readByte(uint8_t, uint8_t);
+
+  uint8_t readByte_fast(uint8_t _familyByte, uint8_t _indexByte);
+  uint8_t readByte_fast(uint8_t _familyByte, uint8_t _indexByte, uint8_t _writeByte);
 
   // This function is exactly as the one above except it accepts a Write Byte as
   // a paramter. It starts a request by writing the family byte, index byte, and
