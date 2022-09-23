@@ -1,5 +1,5 @@
-#ifndef _SPARKFUN_BIO_SENSOR_HUB_LIBRARY_H_
-#define _SPARKFUN_BIO_SENSOR_HUB_LIBRARY_H_
+#ifndef SPARKFUN_BIO_SENSOR_HUB_LIBRARY_H_
+#define SPARKFUN_BIO_SENSOR_HUB_LIBRARY_H_
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -682,19 +682,19 @@ private:
 
   // This function uses the given family, index, and write byte to enable
   // the given sensor.
-  uint8_t enableWrite(uint8_t, uint8_t, uint8_t);
+  uint8_t _enableWrite(uint8_t, uint8_t, uint8_t);
 
   // This function uses the given family, index, and write byte to communicate
   // with the MAX32664 which in turn communicates with downward sensors. There
   // are two steps demonstrated in this function. First a write to the MCU
   // indicating what you want to do, a delay, and then a read to confirm positive
   // transmission.
-  uint8_t writeByte(uint8_t, uint8_t, uint8_t);
+  uint8_t _writeByte(uint8_t, uint8_t, uint8_t);
 
   // This function sends is simliar to the one above and sends info to the MAX32664
   // but takes an additional uint8_t as a paramter. Again there is the write
   // of the specific bytes followed by a read to confirm positive transmission.
-  uint8_t writeByte(uint8_t, uint8_t, uint8_t, uint8_t);
+  uint8_t _writeByte(uint8_t, uint8_t, uint8_t, uint8_t);
 
   // This function is the same as the function above and uses the given family,
   // index, and write byte, but also takes a 16 bit integer as a paramter to communicate
@@ -702,35 +702,35 @@ private:
   // are two steps demonstrated in this function. First a write to the MCU
   // indicating what you want to do, a delay, and then a read to confirm positive
   // transmission.
-  uint8_t writeByte(uint8_t, uint8_t, uint8_t, uint16_t);
+  uint8_t _writeByte(uint8_t, uint8_t, uint8_t, uint16_t);
 
   // This function sends information to the MAX32664 to specifically write values
   // to the registers of downward sensors and so also requires a
   // register address and register value as parameters. Again there is the write
   // of the specific bytes followed by a read to confirm positive transmission.
-  uint8_t writeLongBytes(uint8_t, uint8_t, uint8_t, int32_t _writeVal[], const size_t);
+  uint8_t _writeLongBytes(uint8_t, uint8_t, uint8_t, int32_t writeVal[], size_t);
 
   // This function sends information to the MAX32664 to specifically write values
   // to the registers of downward sensors and so also requires a
   // register address and register value as parameters. Again there is the write
   // of the specific bytes followed by a read to confirm positive transmission.
-  uint8_t writeBytes(uint8_t, uint8_t, uint8_t, uint8_t _writeVal[], const size_t);
+  uint8_t _writeBytes(uint8_t, uint8_t, uint8_t, uint8_t writeVal[], size_t);
 
   // This function handles all read commands or stated another way, all information
   // requests. It starts a request by writing the family byte, index byte, and
   // delays 60 microseconds, during which the MAX32664 retrieves the requested
   // information. An I-squared-C request is then issued, and the information is read and returned.
-  uint8_t readByte(uint8_t, uint8_t);
+  uint8_t _readByte(uint8_t, uint8_t);
 
-  uint8_t readByte_fast(uint8_t _familyByte, uint8_t _indexByte);
-  uint8_t readByte_fast(uint8_t _familyByte, uint8_t _indexByte, uint8_t _writeByte);
+  uint8_t _readByteFast(uint8_t familyByte, uint8_t indexByte);
+  uint8_t _readByteFast(uint8_t familyByte, uint8_t indexByte, uint8_t writeByte);
 
   // This function is exactly as the one above except it accepts a Write Byte as
   // a paramter. It starts a request by writing the family byte, index byte, and
   // write byte to the MAX32664, delays 60 microseconds, during which
   // the MAX32664 retrieves the requested information. A I-squared-C request is
   // then issued, and the information is read and returned.
-  uint8_t readByte(uint8_t, uint8_t, uint8_t);
+  uint8_t _readByte(uint8_t, uint8_t, uint8_t);
 
   // This function handles all read commands or stated another way, all information
   // requests. It starts a request by writing the family byte, an index byte, and
@@ -738,7 +738,7 @@ private:
   // retrieves the requested information. An I-squared-C request is then issued,
   // and the information is read. This differs from the above read commands in
   // that it returns a 16 bit integer instead of 8.
-  uint16_t readIntByte(uint8_t, uint8_t, uint8_t);
+  uint16_t _readIntByte(uint8_t, uint8_t, uint8_t);
 
   // This function handles all read commands or stated another way, all information
   // requests. It starts a request by writing the family byte, an index byte, and
@@ -746,7 +746,7 @@ private:
   // retrieves the requested information. An I-squared-C request is then issued,
   // and the information is read. This function is very similar to the one above
   // except it returns three uint32_t bytes instead of one.
-  uint8_t readMultipleBytes(uint8_t, uint8_t, uint8_t, const size_t, int32_t userArray[]);
+  uint8_t _readMultipleBytes(uint8_t, uint8_t, uint8_t, size_t, int32_t userArray[]);
 
   // This function handles all read commands or stated another way, all information
   // requests. It starts a request by writing the family byte, an index byte, and
@@ -754,9 +754,9 @@ private:
   // retrieves the requested information. An I-squared-C request is then issued,
   // and the information is read. This function is very similar to the one above
   // except it returns multiple requested bytes.
-  uint8_t readMultipleBytes(uint8_t, uint8_t, uint8_t, const size_t, uint8_t userArray[]);
+  uint8_t _readMultipleBytes(uint8_t, uint8_t, uint8_t, size_t, uint8_t userArray[]);
 
   // Needs comment - INCOMPLETE
-  uint8_t readFillArray(uint8_t, uint8_t, uint8_t, uint8_t array[]);
+  uint8_t _readFillArray(uint8_t, uint8_t, uint8_t, uint8_t array[]);
 };
 #endif
