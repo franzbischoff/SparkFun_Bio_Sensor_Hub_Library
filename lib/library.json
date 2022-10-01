@@ -1,10 +1,10 @@
 {
-  "name": "SparkFun Bio Sensor Hub Library",
-  "version": "1.0.5",
+  "name": "SparkFun Bio Sensor Hub unnoficial Library",
+  "version": "1.0.7",
   "description": "The SparkFun Bio Sensor Hub Library is tailored to Maxim Integrated's MAX32664 Bio Sensor Hub interacting with the MAX30101 on [SparkFun's Pulse Oximeter and Heart Rate Monitor](https://www.sparkfun.com/products/15219). The Bio Sensor Hub is a practically microscopic cortex-m0 micro-controller that handles the algorithmic calculation of  the light data gathered by the MAX30101 Pulse Oximeter and Heart Rate Monitor, to produce accurate and fast blood oxygen and heart rate readings. The library provides simple function calls to all available commands on the chip as well as example code demonstrating  basic to advanced capabilities of the chip.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sparkfun/SparkFun_Bio_Sensor_Hub_Library"
+    "url": "https://github.com/franzbischoff/SparkFun_Bio_Sensor_Hub_Library"
   },
   "homepage": "https://github.com/sparkfun/SparkFun_Bio_Sensor_Hub_Library",
   "frameworks": [
@@ -13,6 +13,12 @@
   ],
   "authors": [
     {
+      "name": "Francisco Bischoff",
+      "email": "franzbischoff@gmail.com",
+      "url": "https://github.com/franzbischoff",
+      "maintainer": true
+    },
+    {
       "name": "Elias Santistevan",
       "email": "techsupport@sparkfun.com",
       "url": "https://www.sparkfun.com"
@@ -20,12 +26,6 @@
     {
       "name": "Kyle Johnson",
       "url": "https://github.com/kylejohnson"
-    },
-    {
-      "name": "Francisco Bischoff",
-      "email": "franzbischoff@gmail.com",
-      "url": "https://github.com/franzbischoff",
-      "maintainer": true
     }
   ],
   "platforms": [

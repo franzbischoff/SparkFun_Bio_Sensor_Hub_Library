@@ -66,19 +66,18 @@ struct sensorAttr {
 // Status Bytes are communicated back after every I-squared-C transmission and
 // are indicators of success or failure of the previous transmission.
 enum READ_STATUS_BYTE_VALUE {
-
   SUCCESS = 0x00,
-  ERR_UNAVAIL_CMD,
-  ERR_UNAVAIL_FUNC,
-  ERR_DATA_FORMAT,
-  ERR_INPUT_VALUE,
-  ERR_TRY_AGAIN,
+  ERR_UNAVAIL_CMD = 0x01,
+  ERR_UNAVAIL_FUNC = 0x02,
+  ERR_DATA_FORMAT = 0x03,
+  ERR_INPUT_VALUE = 0x04,
+  ERR_INVALID_MODE = 0x05,
   ERR_BTLDR_GENERAL = 0x80,
-  ERR_BTLDR_CHECKSUM,
-  ERR_BTLDR_AUTH,
-  ERR_BTLDR_INVALID_APP,
+  ERR_BTLDR_CHECKSUM = 0x81,
+  ERR_BTLDR_AUTH = 0x82,
+  ERR_BTLDR_INVALID_APP = 0x83,
+  ERR_TRY_AGAIN = 0xFE,
   ERR_UNKNOWN = 0xFF
-
 };
 
 // The family register bytes are the larger umbrella for all the Index and

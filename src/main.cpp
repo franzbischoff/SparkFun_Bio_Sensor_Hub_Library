@@ -33,22 +33,21 @@
 
 #include <SparkFun_Bio_Sensor_Hub_Library.hpp>
 #include <Wire.h>
+#include <TimerOne.h>
 
+bool ready = false;
 // Reset pin, MFIO pin
-const int resPin = RESPIN;
-const int mfioPin = MFIOPIN;
+const uint16_t RES_PIN = RESPIN;
+const uint16_t MFIO_PIN = MFIOPIN;
 // Possible widths: 69, 118, 215, 411us
-int width = 69;
+const uint16_t WIDTH = 411;
 // Possible samples: 50, 100, 200, 400, 800, 1000, 1600, 3200 samples/second
 // Not every sample amount is possible with every width; check out our hookup
 // guide for more information.
-int samples = 1600;
-int pulseWidthVal;
-int sampleVal;
+const uint16_t SAMPLES = 400;
 
 // Takes address, reset pin, and MFIO pin.
-SparkFun_Bio_Sensor_Hub bioHub(resPin, mfioPin);
-
+SparkFun_Bio_Sensor_Hub bioHub(RES_PIN, MFIO_PIN);
 bioData body;
 
 // following data:
@@ -59,30 +58,76 @@ bioData body;
 // body.oxygen     - Blood oxygen level
 // body.status     - Has a finger been sensed?
 
-void setup(){
+// short period filter
+const float W = 25.0;
+const float EPS = 0.05;
+const float ALPHA = powf(EPS, 1.0f / W);
+
+// large (wander) period filter
+const float WL = 125.0;
+const float ALPHAL = powf(EPS, 1.0f / WL);
+
+float redSum = 0.0;
+float redNum = 0.0;
+float redSum2 = 0.0;
+float redNum2 = 0.0;
+float irSum = 0.0;
+float irNum = 0.0;
+float irSum2 = 0.0;
+float irNum2 = 0.0;
+
+void control_irq() { ready = true; }
+
+void setup() {
 
   Serial.begin(115200);
-
   Wire.begin();
-  int result = bioHub.begin();
+  bioHub.begin();
 
-  int error = bioHub.configSensorBpm(MODE_ONE); // Configure Sensor and BPM mode , MODE_TWO also available
-
-  error = bioHub.setPulseWidth(width);
-  error = bioHub.setSampleRate(samples);
-
-  delay(1000);
-
+  bioHub.configSensorBpm(MODE_ONE);
+  bioHub.setPulseWidth(WIDTH);   // 18 bits resolution (0-262143)
+  bioHub.setSampleRate(SAMPLES); // 18 bits resolution (0-262143)
+  Timer1.initialize(4000);       // 250hz
+  Timer1.attachInterrupt(control_irq);
+  delay(4000); // Wait for sensor to stabilize
 }
 
-void loop(){
+void loop() {
+  body = bioHub.readSensorBpm(); // Read the sensor outside the IRQ, to avoid overload
 
-    // Information from the readSensor function will be saved to our "body"
-    // variable.
-    body = bioHub.readSensorBpm();
-    Serial.print(body.irLed);
+  if (ready) {
+    const float irLed = (float)body.irLed;
+    const float redLed = (float)body.redLed;
+    int16_t irRes = -3000;
+    int16_t redRes = -3000;
+
+    if (irLed > 20000) {
+      irSum = irSum * ALPHA + irLed;
+      irNum = irNum * ALPHA + 1.0f;
+      irSum2 = irSum2 * ALPHAL + irLed;
+      irNum2 = irNum2 * ALPHAL + 1.0f;
+      irRes = (int16_t)(10 * (irSum / irNum - irSum2 / irNum2));
+      if (irRes > 2047 || irRes < -2048) {
+        irRes = -3000;
+      }
+    }
+
+    if (redLed > 20000) {
+      redSum = redSum * ALPHA + redLed;
+      redNum = redNum * ALPHA + 1.0f;
+      redSum2 = redSum2 * ALPHAL + redLed;
+      redNum2 = redNum2 * ALPHAL + 1.0f;
+      redRes = (int16_t)(20 * (redSum / redNum - redSum2 / redNum2));
+      if (redRes > 2047 || redRes < -2048) {
+        redRes = -3000;
+      }
+    }
+
+    Serial.print(irRes);
     Serial.print(",");
-    Serial.println(body.redLed);
-    // Slow it down or your heart rate will go up trying to keep up
-    // with the flow of numbers
+    Serial.println(redRes);
+    ready = false;
+  }
+
+  delay(1); // Just to breath a little
 }
