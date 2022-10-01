@@ -31,11 +31,17 @@
  255 = Error Unknown
 */
 
+#define TIMER_INTERRUPT_DEBUG 0
+#define _TIMERINTERRUPT_LOGLEVEL_ 0
+
+#define USE_TIMER_1 true
+
 #include <SparkFun_Bio_Sensor_Hub_Library.hpp>
 #include <Wire.h>
-#include <TimerOne.h>
+#include <TimerInterrupt_Generic.h>
+// #include <TimerOne.h>
 
-bool ready = false;
+bool ready = true;
 // Reset pin, MFIO pin
 const uint16_t RES_PIN = RESPIN;
 const uint16_t MFIO_PIN = MFIOPIN;
@@ -45,6 +51,16 @@ const uint16_t WIDTH = 411;
 // Not every sample amount is possible with every width; check out our hookup
 // guide for more information.
 const uint16_t SAMPLES = 400;
+
+#if defined(ARDUINO_RASPBERRY_PI_PICO)
+const float TIMER_INTERVAL = 4000.0F; // 4ms = 250Hz
+RPI_PICO_Timer ITimer1(1);
+#elif defined(ARDUINO_ESP32_DEV)
+const uint16_t TIMER_INTERVAL = 4000; // 4ms = 250Hz
+ESP32Timer ITimer1(0);
+#else
+const uint16_t TIMER_INTERVAL = 4000; // 4ms = 250Hz
+#endif
 
 // Takes address, reset pin, and MFIO pin.
 SparkFun_Bio_Sensor_Hub bioHub(RES_PIN, MFIO_PIN);
@@ -59,13 +75,13 @@ bioData body;
 // body.status     - Has a finger been sensed?
 
 // short period filter
-const float W = 25.0;
-const float EPS = 0.05;
-const float ALPHA = powf(EPS, 1.0f / W);
+const float F_WINDOW = 25.0;
+const float EPSF = 0.05;
+const float ALPHA = powf(EPSF, 1.0F / F_WINDOW);
 
 // large (wander) period filter
-const float WL = 125.0;
-const float ALPHAL = powf(EPS, 1.0f / WL);
+const float F_WINDOW2 = 125.0;
+const float ALPHAL = powf(EPSF, 1.0F / F_WINDOW2);
 
 float redSum = 0.0;
 float redNum = 0.0;
@@ -76,10 +92,23 @@ float irNum = 0.0;
 float irSum2 = 0.0;
 float irNum2 = 0.0;
 
+#if defined(ARDUINO_RASPBERRY_PI_PICO)
+bool control_irq(struct repeating_timer *t) {
+  (void)t;
+  ready = true;
+  return true;
+}
+#elif defined(ARDUINO_AVR_NANO)
 void control_irq() { ready = true; }
+#elif defined(ARDUINO_ESP32_DEV)
+bool IRAM_ATTR control_irq(void *t) {
+  (void)t;
+  ready = true;
+  return true;
+}
+#endif
 
 void setup() {
-
   Serial.begin(115200);
   Wire.begin();
   bioHub.begin();
@@ -87,8 +116,11 @@ void setup() {
   bioHub.configSensorBpm(MODE_ONE);
   bioHub.setPulseWidth(WIDTH);   // 18 bits resolution (0-262143)
   bioHub.setSampleRate(SAMPLES); // 18 bits resolution (0-262143)
-  Timer1.initialize(4000);       // 250hz
-  Timer1.attachInterrupt(control_irq);
+
+#if defined(ARDUINO_AVR_NANO)
+  ITimer1.init();
+#endif
+  ITimer1.attachInterruptInterval(TIMER_INTERVAL, control_irq);
   delay(4000); // Wait for sensor to stabilize
 }
 
@@ -101,27 +133,31 @@ void loop() {
     int16_t irRes = -3000;
     int16_t redRes = -3000;
 
-    if (irLed > 20000) {
+    if (irLed > 20000.0F) {
       irSum = irSum * ALPHA + irLed;
-      irNum = irNum * ALPHA + 1.0f;
+      irNum = irNum * ALPHA + 1.0F;
       irSum2 = irSum2 * ALPHAL + irLed;
-      irNum2 = irNum2 * ALPHAL + 1.0f;
-      irRes = (int16_t)(10 * (irSum / irNum - irSum2 / irNum2));
+      irNum2 = irNum2 * ALPHAL + 1.0F;
+      irRes = (int16_t)(10.0F * (irSum / irNum - irSum2 / irNum2));
       if (irRes > 2047 || irRes < -2048) {
         irRes = -3000;
       }
     }
 
-    if (redLed > 20000) {
+    if (redLed > 20000.0F) {
       redSum = redSum * ALPHA + redLed;
-      redNum = redNum * ALPHA + 1.0f;
+      redNum = redNum * ALPHA + 1.0F;
       redSum2 = redSum2 * ALPHAL + redLed;
-      redNum2 = redNum2 * ALPHAL + 1.0f;
-      redRes = (int16_t)(20 * (redSum / redNum - redSum2 / redNum2));
+      redNum2 = redNum2 * ALPHAL + 1.0F;
+      redRes = (int16_t)(10.0F * (redSum / redNum - redSum2 / redNum2));
       if (redRes > 2047 || redRes < -2048) {
         redRes = -3000;
       }
     }
+
+    // Serial.print(body.irLed);
+    // Serial.print(",");
+    // Serial.println(body.redLed);
 
     Serial.print(irRes);
     Serial.print(",");
@@ -129,5 +165,5 @@ void loop() {
     ready = false;
   }
 
-  delay(1); // Just to breath a little
+  // delay(25); // Just to breath a little
 }

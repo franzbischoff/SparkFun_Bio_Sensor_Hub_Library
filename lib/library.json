@@ -29,10 +29,9 @@
     }
   ],
   "platforms": [
-    "native",
     "atmelavr",
     "espressif32",
     "raspberrypi"
   ],
-  "headers": "SparkFun_Bio_Sensor_Hub_Library.h"
+  "headers": "SparkFun_Bio_Sensor_Hub_Library.hpp"
 }
