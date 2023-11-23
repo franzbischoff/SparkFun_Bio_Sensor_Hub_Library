@@ -27,7 +27,7 @@
  255 = Error Unknown
 */
 
-#include <SparkFun_Bio_Sensor_Hub_Library.hpp>
+#include <SparkFun_Bio_Sensor_Hub_Library.h>
 #include <Wire.h>
 
 // Reset pin, MFIO pin

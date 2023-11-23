@@ -24,17 +24,17 @@
  255 = Error Unknown
 */
 
-#include <SparkFun_Bio_Sensor_Hub_Library.hpp>
+#include <SparkFun_Bio_Sensor_Hub_Library.h>
 #include <Wire.h>
 
 // Reset pin, MFIO pin
-int resPin = RESPIN;
-int mfioPin = MFIOPIN;
+int resPin = 4;
+int mfioPin = 5;
 
-int algoRange = 80;    // ADC Range (0-100%)
+int algoRange = 80; // ADC Range (0-100%)
 int algoStepSize = 20; // Step Size (0-100%)
-int algoSens = 20;     // Sensitivity (0-100%)
-int algoSamp = 10;     // Number of samples to average (0-255)
+int algoSens = 20; // Sensitivity (0-100%)
+int algoSamp = 10; // Number of samples to average (0-255)
 
 // Takes address, reset pin, and MFIO pin.
 SparkFun_Bio_Sensor_Hub bioHub(resPin, mfioPin);
@@ -52,7 +52,7 @@ bioData body;
 // body.oxygen     - Blood oxygen level
 // body.status     - Has a finger been sensed?
 
-void setup() {
+void setup(){
 
   Serial.begin(115200);
 
@@ -63,22 +63,22 @@ void setup() {
 
   // Adjusting the Automatic Gain Control (AGC) Algorithm
   int error = bioHub.setAlgoRange(algoRange);
-  if (error > 0) {
+  if (error > 0){
     Serial.println("Could not set algorithm's Range.");
   }
 
   error = bioHub.setAlgoStepSize(algoStepSize);
-  if (error > 0) {
+  if (error > 0){
     Serial.println("Could not set the step size.");
   }
 
   error = bioHub.setAlgoSensitivity(algoSens);
-  if (error > 0) {
+  if (error > 0){
     Serial.println("Could not set the sensitivity.");
   }
 
   error = bioHub.setAlgoSamples(algoSamp);
-  if (error > 0) {
+  if (error > 0){
     Serial.println("Could not set the sample size.");
   }
 
@@ -101,7 +101,7 @@ void setup() {
 
   Serial.println("Configuring Sensor.");
   error = bioHub.configBpm(MODE_ONE);
-  if (error > 0) {
+  if (error > 0){
     Serial.println("Could not configure the sensor.");
   }
 
@@ -110,22 +110,24 @@ void setup() {
   // up.
   Serial.println("Loading up the buffer with data....");
   delay(4000);
+
 }
 
-void loop() {
+void loop(){
 
-  // Information from the readBpm function will be saved to our "body"
-  // variable.
-  body = bioHub.readBpm();
-  Serial.print("Heartrate: ");
-  Serial.println(body.heartRate);
-  Serial.print("Confidence: ");
-  Serial.println(body.confidence);
-  Serial.print("Oxygen: ");
-  Serial.println(body.oxygen);
-  Serial.print("Status: ");
-  Serial.println(body.status);
-  // Slow it down or your heart rate will go up trying to keep up
-  // with the flow of numbers
-  delay(250);
+    // Information from the readBpm function will be saved to our "body"
+    // variable.
+    body = bioHub.readBpm();
+    Serial.print("Heartrate: ");
+    Serial.println(body.heartRate);
+    Serial.print("Confidence: ");
+    Serial.println(body.confidence);
+    Serial.print("Oxygen: ");
+    Serial.println(body.oxygen);
+    Serial.print("Status: ");
+    Serial.println(body.status);
+    // Slow it down or your heart rate will go up trying to keep up
+    // with the flow of numbers
+    delay(250);
+
 }

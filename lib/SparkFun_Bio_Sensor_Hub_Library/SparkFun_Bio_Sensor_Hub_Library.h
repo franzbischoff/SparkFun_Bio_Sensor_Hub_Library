@@ -1,8 +1,10 @@
 #ifndef SPARKFUN_BIO_SENSOR_HUB_LIBRARY_H_
 #define SPARKFUN_BIO_SENSOR_HUB_LIBRARY_H_
 
+#ifndef IDF_VER
 #include <Arduino.h>
 #include <Wire.h>
+#endif
 
 #define WRITE_FIFO_INPUT_BYTE 0x04
 #define DISABLE 0x00
@@ -66,7 +68,7 @@ struct sensorAttr {
 // Status Bytes are communicated back after every I-squared-C transmission and
 // are indicators of success or failure of the previous transmission.
 enum READ_STATUS_BYTE_VALUE {
-  SUCCESS = 0x00,
+  SFE_BIO_SUCCESS = 0x00,
   ERR_UNAVAIL_CMD = 0x01,
   ERR_UNAVAIL_FUNC = 0x02,
   ERR_DATA_FORMAT = 0x03,
@@ -117,7 +119,7 @@ enum FAMILY_REGISTER_BYTES {
 enum DEVICE_MODE_WRITE_BYTES {
 
   EXIT_BOOTLOADER = 0x00,
-  RESET = 0x02,
+  SFE_BIO_RESET = 0x02,
   ENTER_BOOTLOADER = 0x08
 
 };
@@ -308,7 +310,7 @@ public:
   uint8_t bpmSenArrTwo[MAXFAST_ARRAY_SIZE + MAXFAST_EXTENDED_DATA + MAX30101_LED_ARRAY]{};
 
   // Constructor ----------
-  SparkFun_Bio_Sensor_Hub(uint16_t, uint16_t, uint8_t address = 0x55);
+  SparkFun_Bio_Sensor_Hub(int16_t resetPin = -1, int16_t mfioPin = -1, uint8_t address = 0x55);
 
   // Functions ------------
 
@@ -319,7 +321,7 @@ public:
   // in application mode and will return two bytes, the first 0x00 is a
   // successful communcation byte, followed by 0x00 which is the byte indicating
   // which mode the IC is in.
-  uint8_t begin(TwoWire &wirePort = Wire);
+  uint8_t begin(TwoWire &wirePort = Wire, int16_t resetPin = -1, int16_t mfioPin = -1);
 
   // Family Byte: READ_DEVICE_MODE (0x02) Index Byte: 0x00, Write Byte: 0x00
   // The following function puts the MAX32664 into bootloader mode. To place the MAX32664 into
@@ -328,7 +330,7 @@ public:
   // in bootloader mode and will return two bytes, the first 0x00 is a
   // successful communcation byte, followed by 0x08 which is the byte indicating
   // that the board is in bootloader mode.
-  uint8_t beginBootloader(TwoWire &wirePort = Wire);
+  uint8_t beginBootloader(TwoWire &wirePort = Wire, int16_t resetPin = -1, int16_t mfioPin = -1);
 
   // Family Byte: HUB_STATUS (0x00), Index Byte: 0x00, No Write Byte.
   // The following function checks the status of the FIFO.
@@ -667,8 +669,8 @@ public:
 
 private:
   // Variables -----------
-  uint8_t _resetPin;
-  uint8_t _mfioPin;
+  int16_t _resetPin;
+  int16_t _mfioPin;
   uint8_t _address;
   uint32_t _writeCoefArr[3]{};
   uint8_t _userSelectedMode;

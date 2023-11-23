@@ -16,14 +16,11 @@ Integrated: the MAX32664 Bio Metric Sensor Hub and the MAX30101 Pulse Oximetry a
 
 ## Repository Contents
 
-* **/examples** - Example code for the Arduino IDE
-* **/src** - Source files for the library (.cpp and .h files).
-* **/keywords.txt** - Keywords from the library that are highlighted in Arduino IDE.
-* **/library.properties** - General Library properties for the Arduino Package Manager.
+* **/lib/examples** - Example code
+* **/lib/SparkFun_BioSensor_Hub_Library** - Source files for the library (.cpp and .h files).
 
 ## Documentation
 
-* **[Installing an Arduino Library Guide](https://learn.sparkfun.com/tutorials/installing-an-arduino-library)** - Basic information on how to install an Arduino library.
 * **[Hookup Guide](https://learn.sparkfun.com/tutorials/sparkfun-pulse-oximeter-and-heart-rate-monitor-hookup-guide)** - Basic hookup guide for the SparkFun Pulse Oximeter and Heart Rate Sensor.
 
 ## Products that use this library

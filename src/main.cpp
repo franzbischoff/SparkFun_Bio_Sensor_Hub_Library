@@ -1,7 +1,3 @@
-// This is a personal academic project. Dear PVS-Studio, please check it.
-
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: https://pvs-studio.com
-
 /*
  This example displays a more manual method of adjusting the way in which the
  MAX30101 gathers data. Specifically we'll look at how to modify the pulse
@@ -31,41 +27,41 @@
  255 = Error Unknown
 */
 
-#define TIMER_INTERRUPT_DEBUG 0
-#define _TIMERINTERRUPT_LOGLEVEL_ 0
+#include <esp_log.h>
+#include <esp_system.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
-#define USE_TIMER_1 true
+#include <SparkFun_Bio_Sensor_Hub_Library.h>
 
-#include <SparkFun_Bio_Sensor_Hub_Library.hpp>
-#include <Wire.h>
-#include <TimerInterrupt_Generic.h>
-// #include <TimerOne.h>
-
-bool ready = true;
+static const char TAG[] = "main";
 // Reset pin, MFIO pin
-const uint16_t RES_PIN = RESPIN;
-const uint16_t MFIO_PIN = MFIOPIN;
+int resPin = RESPIN;
+int mfioPin = MFIOPIN;
+
 // Possible widths: 69, 118, 215, 411us
-const uint16_t WIDTH = 411;
+int width = 411;
 // Possible samples: 50, 100, 200, 400, 800, 1000, 1600, 3200 samples/second
 // Not every sample amount is possible with every width; check out our hookup
 // guide for more information.
-const uint16_t SAMPLES = 400;
+int samples = 100;
+int pulseWidthVal;
+int sampleVal;
 
-#if defined(ARDUINO_RASPBERRY_PI_PICO)
-const float TIMER_INTERVAL = 4000.0F; // 4ms = 250Hz
-RPI_PICO_Timer ITimer1(1);
-#elif defined(ARDUINO_ESP32_DEV)
-const uint16_t TIMER_INTERVAL = 4000; // 4ms = 250Hz
-ESP32Timer ITimer1(0);
-#else
-const uint16_t TIMER_INTERVAL = 4000; // 4ms = 250Hz
-#endif
+TickType_t last_wake_time;
 
 // Takes address, reset pin, and MFIO pin.
-SparkFun_Bio_Sensor_Hub bioHub(RES_PIN, MFIO_PIN);
-bioData body;
+SparkFun_Bio_Sensor_Hub bioHub(resPin, mfioPin);
 
+bioData body;
+// ^^^^^^^^^
+// What's this!? This is a type (like "int", "byte", "long") unique to the SparkFun
+// Pulse Oximeter and Heart Rate Monitor. Unlike those other types it holds
+// specific information on the LED count values of the sensor and ALSO the
+// biometric data: heart rate, oxygen levels, and confidence. "bioLedData" is
+// actually a specific kind of type, known as a "struct". I chose the name
+// "body" but you could use another variable name like "blood", "readings",
+// "ledBody" or whatever. Using the variable in the following way gives the
 // following data:
 // body.irLed      - Infrared LED counts.
 // body.redLed     - Red LED counts.
@@ -74,96 +70,111 @@ bioData body;
 // body.oxygen     - Blood oxygen level
 // body.status     - Has a finger been sensed?
 
-// short period filter
-const float F_WINDOW = 25.0;
-const float EPSF = 0.05;
-const float ALPHA = powf(EPSF, 1.0F / F_WINDOW);
-
-// large (wander) period filter
-const float F_WINDOW2 = 125.0;
-const float ALPHAL = powf(EPSF, 1.0F / F_WINDOW2);
-
-float redSum = 0.0;
-float redNum = 0.0;
-float redSum2 = 0.0;
-float redNum2 = 0.0;
-float irSum = 0.0;
-float irNum = 0.0;
-float irSum2 = 0.0;
-float irNum2 = 0.0;
-
-#if defined(ARDUINO_RASPBERRY_PI_PICO)
-bool control_irq(struct repeating_timer *t) {
-  (void)t;
-  ready = true;
-  return true;
-}
-#elif defined(ARDUINO_AVR_NANO)
-void control_irq() { ready = true; }
-#elif defined(ARDUINO_ESP32_DEV)
-bool IRAM_ATTR control_irq(void *t) {
-  (void)t;
-  ready = true;
-  return true;
-}
-#endif
-
 void setup() {
-  Serial.begin(115200);
-  Wire.begin();
-  bioHub.begin();
 
-  bioHub.configSensorBpm(MODE_ONE);
-  bioHub.setPulseWidth(WIDTH);   // 18 bits resolution (0-262143)
-  bioHub.setSampleRate(SAMPLES); // 18 bits resolution (0-262143)
-
-#if defined(ARDUINO_AVR_NANO)
-  ITimer1.init();
+#if defined(ARDUINO_ESP32_DEV)
+  vTaskDelay((portTICK_PERIOD_MS * 2000)); // delay for printing after reset
+  ESP_LOGI(TAG, "ARDUINO_ESP32_DEV");
 #endif
-  ITimer1.attachInterruptInterval(TIMER_INTERVAL, control_irq);
-  delay(4000); // Wait for sensor to stabilize
+
+  int result = bioHub.begin();
+  if (result == 0) { // Zero errors!
+    ESP_LOGI(TAG, "Sensor started!");
+  }
+
+  ESP_LOGI(TAG, "Configuring Sensor....");
+  int error = bioHub.configSensorBpm(MODE_ONE); // Configure Sensor and BPM mode , MODE_TWO also available
+  if (error == 0) {                             // Zero errors.
+    ESP_LOGI(TAG, "Sensor configured.");
+  } else {
+    ESP_LOGI(TAG, "Error configuring sensor.");
+    ESP_LOGI(TAG, "Error: ");
+    ESP_LOGI(TAG, "%d", error);
+  }
+
+  // Set pulse width.
+  error = bioHub.setPulseWidth(width);
+  if (error == 0) { // Zero errors.
+    ESP_LOGI(TAG, "Pulse Width Set.");
+  } else {
+    ESP_LOGI(TAG, "Could not set Pulse Width.");
+    ESP_LOGI(TAG, "Error: ");
+    ESP_LOGI(TAG, "%d", error);
+  }
+
+  // Check that the pulse width was set.
+  pulseWidthVal = bioHub.readPulseWidth();
+  ESP_LOGI(TAG, "Pulse Width: ");
+  ESP_LOGI(TAG, "%d", pulseWidthVal);
+
+  // Set sample rate per second. Remember that not every sample rate is
+  // available with every pulse width. Check hookup guide for more information.
+  error = bioHub.setSampleRate(samples);
+  if (error == 0) { // Zero errors.
+    ESP_LOGI(TAG, "Sample Rate Set.");
+  } else {
+    ESP_LOGI(TAG, "Could not set Sample Rate!");
+    ESP_LOGI(TAG, "Error: ");
+    ESP_LOGI(TAG, "%d", error);
+  }
+
+  // bioHub.set_report_period(100);
+
+  // Check sample rate.
+  sampleVal = bioHub.readSampleRate();
+  ESP_LOGI(TAG, "Sample rate is set to: ");
+  ESP_LOGI(TAG, "%d", sampleVal);
+
+  // Data lags a bit behind the sensor, if you're finger is on the sensor when
+  // it's being configured this delay will give some time for the data to catch
+  // up.
+  //  ESP_LOGI(TAG, "Loading up the buffer with data....");
+  //  delay(4000);
+  last_wake_time = xTaskGetTickCount();
 }
 
 void loop() {
-  body = bioHub.readSensorBpm(); // Read the sensor outside the IRQ, to avoid overload
 
-  if (ready) {
-    const float irLed = (float)body.irLed;
-    const float redLed = (float)body.redLed;
-    int16_t irRes = -3000;
-    int16_t redRes = -3000;
+  // Information from the readSensor function will be saved to our "body"
+  // variable.
 
-    if (irLed > 20000.0F) {
-      irSum = irSum * ALPHA + irLed;
-      irNum = irNum * ALPHA + 1.0F;
-      irSum2 = irSum2 * ALPHAL + irLed;
-      irNum2 = irNum2 * ALPHAL + 1.0F;
-      irRes = (int16_t)(10.0F * (irSum / irNum - irSum2 / irNum2));
-      if (irRes > 2047 || irRes < -2048) {
-        irRes = -3000;
-      }
-    }
+  uint8_t samples = bioHub.numSamplesOutFifo();
 
-    if (redLed > 20000.0F) {
-      redSum = redSum * ALPHA + redLed;
-      redNum = redNum * ALPHA + 1.0F;
-      redSum2 = redSum2 * ALPHAL + redLed;
-      redNum2 = redNum2 * ALPHAL + 1.0F;
-      redRes = (int16_t)(10.0F * (redSum / redNum - redSum2 / redNum2));
-      if (redRes > 2047 || redRes < -2048) {
-        redRes = -3000;
-      }
-    }
-
-    // Serial.print(body.irLed);
-    // Serial.print(",");
-    // Serial.println(body.redLed);
-
-    Serial.print(irRes);
-    Serial.print(",");
-    Serial.println(redRes);
-    ready = false;
+  // read all samples in fifo and use most recent one
+  while (samples) {
+    body = bioHub.readSensorBpm();
+    samples--;
   }
 
-  // delay(25); // Just to breath a little
+  //      ESP_LOGI(TAG, samples);
+  //      ESP_LOGI(TAG, ",");
+  ESP_LOGI(TAG, "%u", body.heartRate);
+  ESP_LOGI(TAG, ",");
+  ESP_LOGI(TAG, "%u", body.oxygen);
+
+  samples = bioHub.numSamplesOutFifo();
+
+  // clear fifo before delay
+  while (samples) {
+    body = bioHub.readSensorBpm();
+    samples--;
+  }
+
+  vTaskDelayUntil(&last_wake_time, (portTICK_PERIOD_MS * 500));
 }
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+/// @brief main function
+void app_main(void) {
+  setup();
+
+  for (;;) {
+    loop();
+  }
+}
+
+#ifdef __cplusplus
+}
+#endif

@@ -27,12 +27,12 @@
  255 = Error Unknown
 */
 
-#include <SparkFun_Bio_Sensor_Hub_Library.hpp>
+#include <SparkFun_Bio_Sensor_Hub_Library.h>
 #include <Wire.h>
 
 // Reset pin, MFIO pin
-int resPin = RESPIN;
-int mfioPin = MFIOPIN;
+int resPin = 4;
+int mfioPin = 5;
 
 // Possible widths: 69, 118, 215, 411us
 int width = 411;
@@ -63,7 +63,7 @@ bioData body;
 // body.oxygen     - Blood oxygen level
 // body.status     - Has a finger been sensed?
 
-void setup() {
+void setup(){
 
   Serial.begin(115200);
 
@@ -74,9 +74,10 @@ void setup() {
 
   Serial.println("Configuring Sensor....");
   int error = bioHub.configSensorBpm(MODE_ONE); // Configure Sensor and BPM mode , MODE_TWO also available
-  if (error == 0) {                             // Zero errors.
+  if (error == 0){// Zero errors.
     Serial.println("Sensor configured.");
-  } else {
+  }
+  else {
     Serial.println("Error configuring sensor.");
     Serial.print("Error: ");
     Serial.println(error);
@@ -84,9 +85,10 @@ void setup() {
 
   // Set pulse width.
   error = bioHub.setPulseWidth(width);
-  if (error == 0) { // Zero errors.
+  if (error == 0){// Zero errors.
     Serial.println("Pulse Width Set.");
-  } else {
+  }
+  else {
     Serial.println("Could not set Pulse Width.");
     Serial.print("Error: ");
     Serial.println(error);
@@ -100,9 +102,10 @@ void setup() {
   // Set sample rate per second. Remember that not every sample rate is
   // available with every pulse width. Check hookup guide for more information.
   error = bioHub.setSampleRate(samples);
-  if (error == 0) { // Zero errors.
+  if (error == 0){// Zero errors.
     Serial.println("Sample Rate Set.");
-  } else {
+  }
+  else {
     Serial.println("Could not set Sample Rate!");
     Serial.print("Error: ");
     Serial.println(error);
@@ -118,26 +121,27 @@ void setup() {
   // up.
   Serial.println("Loading up the buffer with data....");
   delay(4000);
+
 }
 
-void loop() {
+void loop(){
 
-  // Information from the readSensor function will be saved to our "body"
-  // variable.
-  body = bioHub.readSensorBpm();
-  Serial.print("Infrared LED counts: ");
-  Serial.println(body.irLed);
-  Serial.print("Red LED counts: ");
-  Serial.println(body.redLed);
-  Serial.print("Heartrate: ");
-  Serial.println(body.heartRate);
-  Serial.print("Confidence: ");
-  Serial.println(body.confidence);
-  Serial.print("Blood Oxygen: ");
-  Serial.println(body.oxygen);
-  Serial.print("Status: ");
-  Serial.println(body.status);
-  // Slow it down or your heart rate will go up trying to keep up
-  // with the flow of numbers
-  delay(250);
+    // Information from the readSensor function will be saved to our "body"
+    // variable.
+    body = bioHub.readSensorBpm();
+    Serial.print("Infrared LED counts: ");
+    Serial.println(body.irLed);
+    Serial.print("Red LED counts: ");
+    Serial.println(body.redLed);
+    Serial.print("Heartrate: ");
+    Serial.println(body.heartRate);
+    Serial.print("Confidence: ");
+    Serial.println(body.confidence);
+    Serial.print("Blood Oxygen: ");
+    Serial.println(body.oxygen);
+    Serial.print("Status: ");
+    Serial.println(body.status);
+    // Slow it down or your heart rate will go up trying to keep up
+    // with the flow of numbers
+    delay(250);
 }
